@@ -1,6 +1,5 @@
 const app = require('./app');
 const { config } = require('./config/config');
-require('./config/database');
 
 const PORT = config.port;
 

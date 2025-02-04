@@ -1,52 +1,49 @@
-const User = require('../models/userModel');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { config } = require('../config/config');
+const userService = require("../services/userService");
 
-const registerUser = async (req, res) => {
+const register = async (req, res) => {
     try {
-        const { username, password, email } = req.body;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, password: hashedPassword, email });
-        await newUser.save();
-        res.status(201).json({ message: 'User registered' });
+        const { username, email, password } = req.body;
+        const newUser = await userService.register(username, email, password);
+        res.status(201).json({ message: "User registered successfully", user: newUser });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ message: error.message });
     }
 };
 
-const loginUser = async (req, res) => {
+const getAll = async (req, res) => {
     try {
-        const { username, password } = req.body;
-        const user = await User.findOne({ username });
-        if (!user || !await bcrypt.compare(password, user.password)) {
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
-        const token = jwt.sign({ userId: user._id }, config.secretKey, { expiresIn: '1h' });
-        res.status(200).json({ token });
+        const users = await userService.getAll();
+        res.status(200).json({ success: true, data: users });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: "Error getting users", error: error.message });
     }
 };
 
-const getAllUser = async (req, res) => {
+const getById = async (req, res) => {
     try {
-        const users = await User.find();
-        res.status(200).json({
-            success: true,
-            data: users
-        });
+        const user = await userService.getById(req.params.id);
+        res.status(200).json({ success: true, data: user });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error getting users',
-            error: error.message
-        });
+        res.status(404).json({ message: error.message });
     }
 };
 
-module.exports = {
-    registerUser,
-    loginUser,
-    getAllUser
+const update = async (req, res) => {
+    try {
+        const updatedUser = await userService.update(req.params.id, req.body);
+        res.status(200).json({ message: "User updated successfully", user: updatedUser });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 };
+
+const remove = async (req, res) => {
+    try {
+        await userService.delete(req.params.id);
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+};
+
+module.exports = { register, getAll, getById, update, remove };

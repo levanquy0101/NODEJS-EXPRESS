@@ -1,18 +1,21 @@
 const express = require('express');
+const connectDB = require("./config/db");
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const userRoutes = require('./routes/userRoutes');
-const { config } = require('./config/config');
+const morgan = require("morgan");
+const routes = require("./routes");
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const app = express();
+connectDB();
 
 // Middlewares
 app.use(bodyParser.json());
+app.use(morgan("dev"));
 app.use(cors());
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use("/", routes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
